@@ -9,10 +9,18 @@ import Model.User (User)
 import Servant.Auth.Server (JWTSettings, defaultJWTSettings, makeJWT)
 
 generateKey :: IO JWK
-generateKey = genJWK (RSAGenParam 2048)
+generateKey = do
+  putStrLn "Generating JWK key"
+  key <- genJWK (RSAGenParam (4096 `div` 8))
+  putStrLn "JWK key generated"
+  return key
 
 initJWTSettings :: IO JWTSettings
-initJWTSettings = defaultJWTSettings <$> generateKey
+initJWTSettings = do
+  putStrLn "Initializing JWT settings"
+  key <- generateKey
+  putStrLn "JWT settings initialized"
+  return $ defaultJWTSettings key
 
 generateToken :: JWTSettings -> User -> IO (Either String Text)
 generateToken jwtSettings user = do
