@@ -25,9 +25,15 @@ source-repository head
 
 library
   exposed-modules:
+      API.Auth
+      API.Root
+      API.User
+      DB.DBManager
       Dummy
       Lib
       Model.User
+      Utils.AuthUtils
+      Utils.JWTUtils
   other-modules:
       Paths_kolaboro_be
   autogen-modules:
@@ -38,14 +44,20 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
+    , jose
+    , lens
     , monad-logger
     , mtl
     , persistent
     , persistent-postgresql
     , persistent-template
+    , postgresql-simple
     , resource-pool
     , resourcet
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-server
     , text
     , time
@@ -66,15 +78,21 @@ executable kolaboro-be-exe
   build-depends:
       aeson
     , base
+    , bytestring
+    , jose
     , kolaboro-be
+    , lens
     , monad-logger
     , mtl
     , persistent
     , persistent-postgresql
     , persistent-template
+    , postgresql-simple
     , resource-pool
     , resourcet
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-server
     , text
     , time
@@ -96,18 +114,24 @@ test-suite kolaboro-be-test
   build-depends:
       aeson
     , base
+    , bytestring
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , jose
     , kolaboro-be
+    , lens
     , monad-logger
     , mtl
     , persistent
     , persistent-postgresql
     , persistent-template
+    , postgresql-simple
     , resource-pool
     , resourcet
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-server
     , text
     , time

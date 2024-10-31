@@ -1,53 +1,27 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TypeOperators #-}
 
 module Lib (startApp) where
 
-import Data.Aeson (FromJSON)
-import Dummy (dummyToken, dummyUsers)
-import GHC.Generics (Generic)
-import Model.User
+import API.Auth (authServer)
+import API.Root (API)
+import API.User (userServer)
+import DB.DBManager
+import Data.Pool (Pool)
+import Database.PostgreSQL.Simple (Connection)
 import Network.Wai.Handler.Warp (run)
 import Servant
-
-data LoginDTO = LoginDTO
-  { username :: String,
-    password :: String
-  }
-  deriving (Eq, Show, Generic)
-
-instance FromJSON LoginDTO
-
-type Token = String
-
-type UserAPI = "users" :> Get '[JSON] [User]
-
-type AuthAPI =
-  "auth"
-    :> ( "login" :> ReqBody '[JSON] LoginDTO :> Post '[JSON] Token
-           :<|> "register" :> ReqBody '[JSON] User :> Post '[JSON] Token
-       )
-
-type API = UserAPI :<|> AuthAPI
-
-userServer :: Handler [User]
-userServer = return dummyUsers
-
-authServer :: (LoginDTO -> Handler Token) :<|> (User -> Handler Token)
-authServer = loginHandler :<|> registerHandler
-  where
-    loginHandler _loginDTO = return dummyToken
-    registerHandler _user = return dummyToken
-
-server :: Server API
-server = userServer :<|> authServer
+import Servant.Auth.Server (JWTSettings)
+import Utils.JWTUtils (initJWTSettings)
 
 api :: Proxy API
 api = Proxy
 
-app :: Application
-app = serve api server
+server :: JWTSettings -> Pool Connection -> Server API
+server jwtSettings pool = userServer :<|> authServer jwtSettings pool
 
 startApp :: IO ()
-startApp = run 8081 app
+startApp = do
+  jwtSettings <- initJWTSettings
+  pool <- initConnectionPool connectionString
+  putStrLn "Running server on port 8081"
+  run 8081 $ serve api (server jwtSettings pool)

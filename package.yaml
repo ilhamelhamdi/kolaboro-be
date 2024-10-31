@@ -24,6 +24,8 @@ dependencies:
 - aeson
 - servant
 - servant-server
+- servant-auth
+- servant-auth-server
 - wai
 - warp
 - time
@@ -36,6 +38,10 @@ dependencies:
 - transformers
 - resource-pool
 - mtl
+- postgresql-simple
+- bytestring
+- jose
+- lens
 
 
 ghc-options:

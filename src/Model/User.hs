@@ -1,19 +1,24 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Model.User (User(..)) where
+module Model.User (User (..)) where
 
-import Data.Aeson
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Time
 import GHC.Generics (Generic)
+import Servant.Auth.JWT
 
 data User = User
-  { username :: String,
+  { email :: String,
     password :: String,
-    email :: String,
     name :: String,
     registered_date :: UTCTime
   }
   deriving (Eq, Show, Generic)
 
 instance ToJSON User
+
 instance FromJSON User
+
+instance ToJWT User
+
+instance FromJWT User
