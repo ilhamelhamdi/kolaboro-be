@@ -2,7 +2,7 @@
 
 module Lib (startApp) where
 
-import API.Auth (authServer)
+import API.Auth.Main (authServer)
 import API.Root (API)
 import API.User (userServer)
 import DB.DBManager

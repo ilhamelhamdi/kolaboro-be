@@ -25,7 +25,9 @@ source-repository head
 
 library
   exposed-modules:
-      API.Auth
+      API.Auth.Login
+      API.Auth.Main
+      API.Auth.Register
       API.Root
       API.User
       DB.DBManager

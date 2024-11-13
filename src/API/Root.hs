@@ -2,7 +2,7 @@
 
 module API.Root (API) where
 
-import API.Auth (AuthAPI)
+import API.Auth.Main (AuthAPI)
 import API.User (UserAPI)
 import Servant
 

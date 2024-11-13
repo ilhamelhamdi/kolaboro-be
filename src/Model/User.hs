@@ -20,5 +20,3 @@ instance ToJSON User
 instance FromJSON User
 
 instance ToJWT User
-
-instance FromJWT User

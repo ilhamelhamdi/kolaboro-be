@@ -3,20 +3,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
-module API.Auth (AuthAPI, authServer) where
+module API.Auth.Login (LoginAPI, loginHandler) where
 
+import Control.Exception ()
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Pool (Pool, withResource)
 import Data.Text (Text)
-import Data.Time (UTCTime)
-import Database.PostgreSQL.Simple (Connection, query)
-import Dummy (dummyToken)
+import Database.PostgreSQL.Simple
 import GHC.Generics (Generic)
-import Model.User hiding (email, password)
+import Model.User (User (..))
 import Servant
-import Servant.Auth.Server (JWTSettings)
+import Servant.Auth.Server
 import Utils.JWTUtils (generateToken)
+import Data.Time (UTCTime)
+
+type LoginAPI = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] Token
 
 newtype Token = Token {unToken :: Text}
   deriving (Eq, Show, Generic)
@@ -33,15 +35,9 @@ instance FromJSON LoginRequest
 
 instance ToJSON LoginRequest
 
-type AuthAPI =
-  "auth"
-    :> ( "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] Token
-           :<|> "register" :> ReqBody '[JSON] User :> Post '[JSON] Token
-       )
-
 loginHandler :: JWTSettings -> Pool Connection -> LoginRequest -> Handler Token
 loginHandler jwtSettings pool (LoginRequest _email _password) = do
-  user <- liftIO $ queryUser pool _email _password
+  user <- liftIO $ validateUser pool _email _password
   case user of
     Just u -> do
       token <- liftIO $ generateToken jwtSettings u
@@ -51,15 +47,8 @@ loginHandler jwtSettings pool (LoginRequest _email _password) = do
     Nothing ->
       throwError err401 {errBody = "Invalid credentials"}
 
--- TODO : Implement registration
-registerHandler :: User -> Handler Token
-registerHandler _user = return $ Token dummyToken
-
-authServer :: JWTSettings -> Pool Connection -> Server AuthAPI
-authServer jwtSettings pool = loginHandler jwtSettings pool :<|> registerHandler
-
-queryUser :: Pool Connection -> String -> String -> IO (Maybe User)
-queryUser pool _email _password = do
+validateUser :: Pool Connection -> String -> String -> IO (Maybe User)
+validateUser pool _email _password = do
   liftIO $ withResource pool $ \conn -> do
     let q = "SELECT email, password, registered_date FROM users WHERE email=? AND password=?"
     users <- query conn q (_email, _password) :: IO [(String, String, UTCTime)]
