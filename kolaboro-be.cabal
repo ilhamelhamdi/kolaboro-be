@@ -33,6 +33,7 @@ library
       DB.DBManager
       Dummy
       Lib
+      Model.Canvas
       Model.User
       Utils.AuthUtils
       Utils.JWTUtils

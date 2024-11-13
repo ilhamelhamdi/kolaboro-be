@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE TypeOperators #-}
 
 module API.Auth.Login (LoginAPI, loginHandler) where
@@ -12,11 +13,11 @@ import Data.Pool (Pool, withResource)
 import Data.Text (Text)
 import Database.PostgreSQL.Simple
 import GHC.Generics (Generic)
-import Model.User (User (..))
+import Model.User
 import Servant
 import Servant.Auth.Server
 import Utils.JWTUtils (generateToken)
-import Data.Time (UTCTime)
+import Prelude hiding (id)
 
 type LoginAPI = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] Token
 
@@ -36,8 +37,8 @@ instance FromJSON LoginRequest
 instance ToJSON LoginRequest
 
 loginHandler :: JWTSettings -> Pool Connection -> LoginRequest -> Handler Token
-loginHandler jwtSettings pool (LoginRequest _email _password) = do
-  user <- liftIO $ validateUser pool _email _password
+loginHandler jwtSettings pool (LoginRequest email _password) = do
+  user <- liftIO $ validateUser pool email _password
   case user of
     Just u -> do
       token <- liftIO $ generateToken jwtSettings u
@@ -48,12 +49,10 @@ loginHandler jwtSettings pool (LoginRequest _email _password) = do
       throwError err401 {errBody = "Invalid credentials"}
 
 validateUser :: Pool Connection -> String -> String -> IO (Maybe User)
-validateUser pool _email _password = do
+validateUser pool reqEmail reqPassword = do
   liftIO $ withResource pool $ \conn -> do
-    let q = "SELECT email, password, registered_date FROM users WHERE email=? AND password=?"
-    users <- query conn q (_email, _password) :: IO [(String, String, UTCTime)]
+    let q = "SELECT * FROM users WHERE email=? AND password=?"
+    users <- query conn q (reqEmail, reqPassword) :: IO [UserTuple]
     case users of
       [] -> return Nothing
-      _ -> do
-        let (_email, _name, _registered_date) = head users
-        return $ Just $ User _email "" _name _registered_date
+      _ -> return $ Just $ fromTuple $ head users
