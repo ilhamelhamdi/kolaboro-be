@@ -28,14 +28,19 @@ library
       API.Auth.Login
       API.Auth.Main
       API.Auth.Register
+      API.Canvas.CreateCanvas
+      API.Canvas.GetCanvas
+      API.Canvas.GetCanvases
+      API.Canvas.Main
+      API.Protected
       API.Root
       API.User
       DB.DBManager
       Dummy
       Lib
       Model.Canvas
+      Model.Note
       Model.User
-      Utils.AuthUtils
       Utils.JWTUtils
   other-modules:
       Paths_kolaboro_be

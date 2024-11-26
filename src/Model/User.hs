@@ -1,13 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Model.User (User (..), UserTuple, toTuple, fromTuple) where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Time
 import GHC.Generics (Generic)
-import Servant.Auth.JWT
 import Prelude hiding (id)
 
 data User = User
@@ -21,11 +21,9 @@ data User = User
   }
   deriving (Eq, Show, Generic)
 
-instance ToJSON User
-
 instance FromJSON User
 
-instance ToJWT User
+instance ToJSON User
 
 type UserTuple = (Int, String, String, String, String, UTCTime, UTCTime)
 

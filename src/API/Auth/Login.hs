@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
 module API.Auth.Login (LoginAPI, loginHandler) where
@@ -21,7 +21,7 @@ import Prelude hiding (id)
 
 type LoginAPI = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] Token
 
-newtype Token = Token {unToken :: Text}
+newtype Token = Token {token :: Text}
   deriving (Eq, Show, Generic)
 
 instance ToJSON Token
@@ -37,12 +37,12 @@ instance FromJSON LoginRequest
 instance ToJSON LoginRequest
 
 loginHandler :: JWTSettings -> Pool Connection -> LoginRequest -> Handler Token
-loginHandler jwtSettings pool (LoginRequest email _password) = do
-  user <- liftIO $ validateUser pool email _password
+loginHandler jwtSettings pool (LoginRequest _email _password) = do
+  user <- liftIO $ validateUser pool _email _password
   case user of
     Just u -> do
-      token <- liftIO $ generateToken jwtSettings u
-      case token of
+      jwt <- liftIO $ generateToken jwtSettings u
+      case jwt of
         Left _ -> throwError $ err401 {errBody = "Failed to generate token"}
         Right t -> return $ Token t
     Nothing ->
