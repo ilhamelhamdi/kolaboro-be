@@ -2,11 +2,11 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Model.Canvas (Canvas (..), Owner (..), userToOwner, CanvasTuple, toTuple, fromTuple) where
+module Model.Canvas (Canvas (..), Owner (..), userToOwner, CanvasTuple, toTuple, fromTuple, setOwner) where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Time
-import GHC.Generics (Generic (from))
+import GHC.Generics (Generic)
 import Model.User (User (..))
 import Prelude hiding (id)
 
@@ -46,7 +46,8 @@ fromTuple (id, title, namespace, address, ownerId, background, createdAt, update
       updatedAt
     }
 
-
+setOwner :: Canvas -> Owner -> Canvas
+setOwner canvas owner = canvas {owner = owner}
 
 data Owner = Owner
   { id :: Int,

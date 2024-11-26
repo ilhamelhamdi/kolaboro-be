@@ -8,8 +8,7 @@
 module API.Canvas.CreateCanvas (CreateCanvasAPI, createCanvasHandler) where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Control.Monad.RWS.CPS (MonadState (put))
-import Data.Aeson (FromJSON, ToJSON (toJSON))
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Pool (Pool, withResource)
 import Data.Time (UTCTime, getCurrentTime)
 import Database.PostgreSQL.Simple (Connection, Only (Only), query)
@@ -29,6 +28,7 @@ data CreateCanvasRequest = CreateCanvasRequest
   deriving (Eq, Show, Generic)
 
 instance FromJSON CreateCanvasRequest
+
 instance ToJSON CreateCanvasRequest
 
 type CreateCanvasAPI = ReqBody '[JSON] CreateCanvasRequest :> Post '[JSON] Canvas

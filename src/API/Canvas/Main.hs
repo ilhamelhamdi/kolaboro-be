@@ -9,7 +9,6 @@ import API.Canvas.GetCanvases (GetCanvasesAPI, getCanvasesHandler)
 import Control.Monad.IO.Class (liftIO)
 import Data.Pool (Pool)
 import Database.PostgreSQL.Simple (Connection)
-import Model.User (User)
 import Servant
 import Servant.Auth.Server
 import Utils.JWTUtils (UserClaims, getUserFromUserClaims)

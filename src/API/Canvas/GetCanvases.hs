@@ -19,6 +19,8 @@ type GetCanvasesAPI = Get '[JSON] [Canvas]
 getCanvasesHandler :: User -> Pool Connection -> Handler [Canvas]
 getCanvasesHandler user pool = liftIO $ withResource pool $ \conn -> do
   let q = "SELECT * FROM canvas WHERE owner_id=?"
-  canvases <- query conn q (Only $ User.id user) :: IO [CanvasTuple]
-  let owner =  Canvas.userToOwner user
-  return $ map Canvas.fromTuple canvases
+  canvasTuples <- query conn q (Only $ User.id user) :: IO [CanvasTuple]
+  let canvases = map Canvas.fromTuple canvasTuples
+      owner = Canvas.userToOwner user
+      canvasesWithOwner = map (`Canvas.setOwner` owner) canvases
+  return canvasesWithOwner
