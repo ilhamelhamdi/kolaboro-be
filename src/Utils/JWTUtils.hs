@@ -10,14 +10,15 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Crypto.JWT
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString.Lazy as BL
-import Data.Pool (Pool, withResource)
+import Data.Pool (Pool)
 import Data.Text (Text)
 import Data.Text.Encoding
 import Data.Time (addUTCTime, getCurrentTime)
-import Database.PostgreSQL.Simple (Connection, Only (Only), query)
+import Database.PostgreSQL.Simple (Connection)
 import GHC.Generics (Generic)
 import Model.User (User)
 import qualified Model.User as User
+import Repo.BaseRepo (BaseRepo (findById), PGRepo (PGRepo))
 import Servant.Auth.Server (FromJWT, JWTSettings, ToJWT, defaultJWTSettings, makeJWT)
 
 generateKey :: IO JWK
@@ -63,10 +64,4 @@ userToUserClaims :: User -> UserClaims
 userToUserClaims user = UserClaims {userId = User.id user, email = User.email user, username = User.username user, displayName = User.display_name user}
 
 getUserFromUserClaims :: Pool Connection -> UserClaims -> IO (Maybe User)
-getUserFromUserClaims pool userClaims = do
-  liftIO $ withResource pool $ \conn -> do
-    let q = "SELECT * FROM users WHERE id=?"
-    users <- query conn q (Only (userId userClaims)) :: IO [User.UserTuple]
-    case users of
-      [] -> return Nothing
-      _ -> return $ Just $ User.fromTuple $ head users
+getUserFromUserClaims pool userClaims = liftIO $ findById (PGRepo pool :: PGRepo User) (userId userClaims)

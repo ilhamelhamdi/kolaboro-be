@@ -11,14 +11,16 @@ import Data.Pool (Pool)
 import Database.PostgreSQL.Simple (Connection)
 import Servant
 import Servant.Auth.Server
+    ( Auth, JWT, ThrowAll(throwAll), AuthResult(Authenticated) )
 import Utils.JWTUtils (UserClaims, getUserFromUserClaims)
+import API.Canvas.GetCanvas (GetCanvasAPI, getCanvasHandler)
 
-type CanvasAPI = Auth '[JWT] UserClaims :> "canvas" :> (CreateCanvasAPI :<|> GetCanvasesAPI)
+type CanvasAPI = Auth '[JWT] UserClaims :> "canvas" :> (CreateCanvasAPI :<|> GetCanvasesAPI :<|> GetCanvasAPI)
 
 canvasServer :: Pool Connection -> Server CanvasAPI
 canvasServer pool = authServer
   where
-    authServer (Authenticated uClaim) = createCanvasHandler' uClaim :<|> getCanvasesHandler' uClaim
+    authServer (Authenticated uClaim) = createCanvasHandler' uClaim :<|> getCanvasesHandler' uClaim :<|> getCanvasHandler' uClaim
     authServer _ = throwAll err401 {errBody = "Unauthenticated"}
 
     createCanvasHandler' uClaim reqBody = do
@@ -31,4 +33,10 @@ canvasServer pool = authServer
       maybeUser <- liftIO $ getUserFromUserClaims pool uClaim
       case maybeUser of
         Just user -> getCanvasesHandler user pool
+        Nothing -> throwError err401 {errBody = "Unauthenticated"}
+
+    getCanvasHandler' uClaim canvasId = do
+      maybeUser <- liftIO $ getUserFromUserClaims pool uClaim
+      case maybeUser of
+        Just user -> getCanvasHandler user pool canvasId
         Nothing -> throwError err401 {errBody = "Unauthenticated"}

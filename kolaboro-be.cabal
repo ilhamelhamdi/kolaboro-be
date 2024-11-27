@@ -28,6 +28,7 @@ library
       API.Auth.Login
       API.Auth.Main
       API.Auth.Register
+      API.Base.GetHandler
       API.Canvas.CreateCanvas
       API.Canvas.GetCanvas
       API.Canvas.GetCanvases
@@ -41,6 +42,7 @@ library
       Model.Canvas
       Model.Note
       Model.User
+      Repo.BaseRepo
       Utils.JWTUtils
   other-modules:
       Paths_kolaboro_be

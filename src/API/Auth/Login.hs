@@ -9,11 +9,12 @@ module API.Auth.Login (LoginAPI, loginHandler) where
 import Control.Exception ()
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Pool (Pool, withResource)
+import Data.Pool (Pool)
 import Data.Text (Text)
 import Database.PostgreSQL.Simple
 import GHC.Generics (Generic)
 import Model.User
+import Repo.BaseRepo (BaseRepo (findByPredicate), PGRepo (..), Predicate (And), equals)
 import Servant
 import Servant.Auth.Server
 import Utils.JWTUtils (generateToken)
@@ -50,9 +51,4 @@ loginHandler jwtSettings pool (LoginRequest _email _password) = do
 
 validateUser :: Pool Connection -> String -> String -> IO (Maybe User)
 validateUser pool reqEmail reqPassword = do
-  liftIO $ withResource pool $ \conn -> do
-    let q = "SELECT * FROM users WHERE email=? AND password=?"
-    users <- query conn q (reqEmail, reqPassword) :: IO [UserTuple]
-    case users of
-      [] -> return Nothing
-      _ -> return $ Just $ fromTuple $ head users
+  liftIO $ findByPredicate (PGRepo pool :: PGRepo User) $ And (equals "email" reqEmail) (equals "password" reqPassword)
