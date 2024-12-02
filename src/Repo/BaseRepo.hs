@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
--- Minimal Pragma
 
 module Repo.BaseRepo (BaseRepo (..), PGRepo (..), Predicate (..), toSqlWithParams, equals, greaterThan, lessThan) where
 

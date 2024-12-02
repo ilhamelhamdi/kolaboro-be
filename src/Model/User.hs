@@ -55,32 +55,28 @@ userFieldsWithoutId = ["email", "password", "username", "display_name", "registe
 
 instance BaseRepo (PGRepo User) User Int where
   findListByPredicate :: PGRepo User -> Predicate -> IO [User]
-  findListByPredicate (PGRepo pool) predicate = do
-    withResource pool $ \conn -> do
-      let (whereClause, params) = toSqlWithParams predicate
-      let q = "SELECT * FROM users WHERE " ++ whereClause
-      query conn (fromString q) params :: IO [User]
+  findListByPredicate (PGRepo pool) predicate = withResource pool $ \conn -> do
+    let (whereClause, params) = toSqlWithParams predicate
+    let q = "SELECT * FROM users WHERE " ++ whereClause
+    query conn (fromString q) params :: IO [User]
 
   create :: PGRepo User -> User -> IO User
-  create (PGRepo pool) user = do
-    withResource pool $ \conn -> do
-      let fieldNames = intercalate ", " userFieldsWithoutId
-      let questionMarks = intercalate ", " $ replicate (length userFieldsWithoutId) "?"
-      let q = "INSERT INTO users (" ++ fieldNames ++ ") VALUES (" ++ questionMarks ++ ") RETURNING *"
-      [savedUser] <- query conn (fromString q) (toRowWithoutId user)
-      return savedUser
+  create (PGRepo pool) user = withResource pool $ \conn -> do
+    let fieldNames = intercalate ", " userFieldsWithoutId
+    let questionMarks = intercalate ", " $ replicate (length userFieldsWithoutId) "?"
+    let q = "INSERT INTO users (" ++ fieldNames ++ ") VALUES (" ++ questionMarks ++ ") RETURNING *"
+    [savedUser] <- query conn (fromString q) (toRowWithoutId user)
+    return savedUser
 
   updateById :: PGRepo User -> Int -> User -> IO User
-  updateById (PGRepo pool) userId user = do
-    withResource pool $ \conn -> do
-      let setFields = intercalate ", " (map (++ " = ?") userFieldsWithoutId)
-      let q = "UPDATE users SET " ++ setFields ++ " WHERE id = ? RETURNING *"
-      [updatedUser] <- query conn (fromString q) (toRowWithoutId user ++ [toField userId])
-      return updatedUser
+  updateById (PGRepo pool) userId user = withResource pool $ \conn -> do
+    let setFields = intercalate ", " (map (++ " = ?") userFieldsWithoutId)
+    let q = "UPDATE users SET " ++ setFields ++ " WHERE id = ? RETURNING *"
+    [updatedUser] <- query conn (fromString q) (toRowWithoutId user ++ [toField userId])
+    return updatedUser
 
   deleteById :: PGRepo User -> Int -> IO ()
-  deleteById (PGRepo pool) userId = do
-    withResource pool $ \conn -> do
-      let q = "DELETE FROM users WHERE id = ?"
-      _ <- execute conn q (Only userId)
-      return ()
+  deleteById (PGRepo pool) userId = withResource pool $ \conn -> do
+    let q = "DELETE FROM users WHERE id = ?"
+    _ <- execute conn q (Only userId)
+    return ()

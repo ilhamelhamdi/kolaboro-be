@@ -23,4 +23,5 @@ getCanvasesHandler user pool = do
   let owner = Canvas.userToOwner user
   return $ map (`Canvas.setOwner` owner) canvases
   where
+    findCanvasesByOwnerId :: Int -> Pool Connection -> IO [Canvas]
     findCanvasesByOwnerId ownerId connPool = findListByPredicate (PGRepo connPool :: PGRepo Canvas) $ equals "owner_id" ownerId

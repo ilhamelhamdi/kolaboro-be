@@ -7,7 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Model.Canvas (Canvas (..), Owner (..), userToOwner, setOwner) where
+module Model.Canvas (Canvas (..), Owner (..), userToOwner, setOwner, findUserCanvasById) where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.List (intercalate)
@@ -19,7 +19,8 @@ import Database.PostgreSQL.Simple.FromField (FromField (fromField))
 import Database.PostgreSQL.Simple.FromRow (FromRow (fromRow), field)
 import Database.PostgreSQL.Simple.ToField (Action, ToField (toField))
 import GHC.Generics (Generic)
-import Model.User (User (..))
+import Model.User (User)
+import qualified Model.User as User
 import Repo.BaseRepo (BaseRepo (..), PGRepo (..), Predicate, toSqlWithParams)
 import Prelude hiding (id)
 
@@ -88,25 +89,14 @@ instance BaseRepo (PGRepo Canvas) Canvas Int where
       _ <- execute conn q (Only canvasId)
       return ()
 
--- type CanvasTuple = (Int, String, String, String, Int, String, UTCTime, UTCTime)
-
--- toTuple :: Canvas -> CanvasTuple
--- toTuple Canvas {id, title, namespace, address, owner, background, createdAt, updatedAt} =
---   let Owner {id = ownerId} = owner
---    in (id, title, namespace, address, ownerId, background, createdAt, updatedAt)
-
--- fromTuple :: CanvasTuple -> Canvas
--- fromTuple (id, title, namespace, address, ownerId, background, createdAt, updatedAt) =
---   Canvas
---     { id,
---       title,
---       namespace,
---       address,
---       owner = Owner {id = ownerId, username = "", displayName = ""},
---       background,
---       createdAt,
---       updatedAt
---     }
+findUserCanvasById :: PGRepo Canvas -> User -> Int -> IO (Maybe Canvas)
+findUserCanvasById (PGRepo pool) user canvasId = do
+  withResource pool $ \conn -> do
+    let q = "SELECT * FROM canvas WHERE id = ? AND owner_id = ?"
+    maybeCanvas <- query conn q (canvasId, User.id user)
+    case maybeCanvas of
+      [] -> return Nothing
+      canvas : _ -> return $ Just canvas
 
 setOwner :: Canvas -> Owner -> Canvas
 setOwner canvas owner = canvas {owner = owner}
@@ -131,4 +121,4 @@ instance ToField Owner where
   toField Owner {id = ownerId} = toField ownerId
 
 userToOwner :: User -> Owner
-userToOwner User {id, username, display_name} = Owner {id, username, displayName = display_name}
+userToOwner User.User {id, username, display_name} = Owner {id, username, displayName = display_name}

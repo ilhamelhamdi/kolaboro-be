@@ -28,15 +28,17 @@ library
       API.Auth.Login
       API.Auth.Main
       API.Auth.Register
-      API.Base.GetHandler
       API.Canvas.CreateCanvas
+      API.Canvas.DeleteCanvas
       API.Canvas.GetCanvas
       API.Canvas.GetCanvases
       API.Canvas.Main
+      API.Canvas.UpdateCanvas
       API.Protected
       API.Root
       API.User
       DB.DBManager
+      DTO.CanvasDTO
       Dummy
       Lib
       Model.Canvas
