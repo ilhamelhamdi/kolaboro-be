@@ -42,6 +42,11 @@ dependencies:
 - bytestring
 - jose
 - lens
+- servant-websockets
+- websockets
+- containers
+- stm
+- wai-cors
 
 
 ghc-options:

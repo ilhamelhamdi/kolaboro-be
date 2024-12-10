@@ -1002,7 +1002,8 @@
     "moderation_violations": null,
     "is_awaiting_approval": false
   },
-  { // user_name_update
+  {
+    // user_name_update
     "user": {
       "id": 3031111951,
       "name": "Supportive Lemur",
@@ -1044,5 +1045,48 @@
       "personal_pricing_plan_variant": null,
       "is_archive_enabled": false
     }
+  },
+
+  // add wish new
+  {
+    "id": 3246770762,
+    "hashid": "post_YBl3Z2zRM4k6Zv16",
+    "wall_id": 219960690,
+    "published": true,
+    "row_id": null,
+    "col_id": null,
+    "row_span": 1,
+    "col_span": 1,
+    "is_content_hidden": false,
+    "updated_at": "2024-12-04T16:49:31.907Z",
+    "headline": "Kyukyu",
+    "subject": "Kyukyu",
+    "body": "\u003cp\u003elalala\u003c/p\u003e",
+    "permalink": "https://padlet.com/ilhamabdillah123/my-bold-padlet-rldeg1gpq9rr9bzg/wish/YBl3Z2zRM4k6Zv16",
+    "author_id": 2847732908,
+    "author_hashid": "user_wMAdD2qVZjKLJL7V",
+    "wall_hashid": "board_oEKlvJZWj23Evxq0",
+    "wall_section_hashid": "sec_3jXMqplZaLwXqAzx",
+    "created_at": "2024-12-04T16:49:31.907Z",
+    "content_updated_at": "2024-12-04T16:49:31.903Z",
+    "scheduled_at": null,
+    "published_at": "2024-12-04T16:49:31.903Z",
+    "pinned_at": null,
+    "color": null,
+    "location_point": {},
+    "location_name": null,
+    "top": 141,
+    "left": 16,
+    "width": 256,
+    "position": { "left": 16, "top": 141 },
+    "sort_index": -1862081003520,
+    "wall_section_id": 262885246,
+    "rank": null,
+    "label": null,
+    "attachment_caption": null,
+    "custom_properties": null,
+    "wish_content": null,
+    "attachment": "",
+    "moderation_violations": null
   }
 ]

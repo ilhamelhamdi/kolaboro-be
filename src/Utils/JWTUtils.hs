@@ -4,14 +4,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Utils.JWTUtils (generateToken, generateKey, initJWTSettings, UserClaims (..), userToUserClaims, getUserFromUserClaims) where
+module Utils.JWTUtils (generateToken, generateKey, initJWTSettings, UserClaims (..), userToUserClaims, getUserFromUserClaims, verifiyToken) where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Crypto.JWT
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString.Lazy as BL
 import Data.Pool (Pool)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Text.Encoding
 import Data.Time (addUTCTime, getCurrentTime)
 import Database.PostgreSQL.Simple (Connection)
@@ -19,7 +19,8 @@ import GHC.Generics (Generic)
 import Model.User (User)
 import qualified Model.User as User
 import Repo.BaseRepo (BaseRepo (findById), PGRepo (PGRepo))
-import Servant.Auth.Server (FromJWT, JWTSettings, ToJWT, defaultJWTSettings, makeJWT)
+import Servant.Auth.Server (FromJWT, JWTSettings, ToJWT, defaultJWTSettings, makeJWT, verifyJWT)
+import qualified Servant.Auth.Server as SAS
 
 generateKey :: IO JWK
 generateKey = do
@@ -65,3 +66,6 @@ userToUserClaims user = UserClaims {userId = User.id user, email = User.email us
 
 getUserFromUserClaims :: Pool Connection -> UserClaims -> IO (Maybe User)
 getUserFromUserClaims pool userClaims = liftIO $ findById (PGRepo pool :: PGRepo User) (userId userClaims)
+
+verifiyToken :: JWTSettings -> Text -> IO (Maybe UserClaims)
+verifiyToken jwtSetting = SAS.verifyJWT jwtSetting . encodeUtf8 

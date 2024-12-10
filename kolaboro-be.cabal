@@ -34,17 +34,26 @@ library
       API.Canvas.GetCanvases
       API.Canvas.Main
       API.Canvas.UpdateCanvas
+      API.Note.CreateNote
+      API.Note.DeleteNote
+      API.Note.Main
+      API.Note.UpdateNote
       API.Protected
       API.Root
+      API.Stream.EventHandler
+      API.Stream.Main
       API.User
       DB.DBManager
       DTO.CanvasDTO
+      DTO.NoteDTO
+      DTO.StreamBaseDTO
       Dummy
       Lib
       Model.Canvas
       Model.Note
       Model.User
       Repo.BaseRepo
+      Utils.ChannelUtils
       Utils.JWTUtils
   other-modules:
       Paths_kolaboro_be
@@ -57,6 +66,7 @@ library
       aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
     , jose
     , lens
     , monad-logger
@@ -71,11 +81,15 @@ library
     , servant-auth
     , servant-auth-server
     , servant-server
+    , servant-websockets
+    , stm
     , text
     , time
     , transformers
     , wai
+    , wai-cors
     , warp
+    , websockets
   default-language: Haskell2010
 
 executable kolaboro-be-exe
@@ -91,6 +105,7 @@ executable kolaboro-be-exe
       aeson
     , base
     , bytestring
+    , containers
     , jose
     , kolaboro-be
     , lens
@@ -106,11 +121,15 @@ executable kolaboro-be-exe
     , servant-auth
     , servant-auth-server
     , servant-server
+    , servant-websockets
+    , stm
     , text
     , time
     , transformers
     , wai
+    , wai-cors
     , warp
+    , websockets
   default-language: Haskell2010
 
 test-suite kolaboro-be-test
@@ -127,6 +146,7 @@ test-suite kolaboro-be-test
       aeson
     , base
     , bytestring
+    , containers
     , hspec
     , hspec-wai
     , hspec-wai-json
@@ -145,9 +165,13 @@ test-suite kolaboro-be-test
     , servant-auth
     , servant-auth-server
     , servant-server
+    , servant-websockets
+    , stm
     , text
     , time
     , transformers
     , wai
+    , wai-cors
     , warp
+    , websockets
   default-language: Haskell2010
