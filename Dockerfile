@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y build-essential g++ libtinfo6 zlib1g-dev curl
+RUN apt-get update && apt-get install -y build-essential g++ libtinfo6 zlib1g-dev curl libpq-dev postgresql-client
 
 # Install Haskell Stack
 RUN curl -sSL https://get.haskellstack.org/ | sh
