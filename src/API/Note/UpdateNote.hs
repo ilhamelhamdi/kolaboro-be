@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -14,6 +15,8 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Pool (Pool)
 import Data.Time (getCurrentTime)
 import Database.PostgreSQL.Simple (Connection)
+import Model.Canvas (Canvas)
+import qualified Model.Canvas as Canvas
 import Model.Note (Note)
 import qualified Model.Note as Note
 import Model.User (User)
@@ -31,28 +34,35 @@ updateNoteHandler pool channelMap user noteId noteDTO = do
   case maybeOldNote of
     Nothing -> throwError $ jsonError404 "Failed to update note" (Just "Note not found.")
     Just oldNote ->
-      if Note.authorId oldNote /= User.id user
-        then throwError $ jsonError403 "Forbidden" (Just "You are not the author of this note")
-        else do
-          currentTime <- liftIO getCurrentTime
-          let updatedNote =
-                oldNote
-                  { Note.canvasId = NoteDTO.canvasId noteDTO,
-                    Note.subject = NoteDTO.subject noteDTO,
-                    Note.body = NoteDTO.body noteDTO,
-                    Note.positionLeft = NoteDTO.positionLeft noteDTO,
-                    Note.positionTop = NoteDTO.positionTop noteDTO,
-                    Note.width = NoteDTO.width noteDTO,
-                    Note.zIndex = NoteDTO.zIndex noteDTO,
-                    Note.updatedAt = currentTime
-                  }
-          newNote <- liftIO $ updateById connPool noteId updatedNote
-          let streamDTO =
-                StreamBaseDTO
-                  { event = "edit_note",
-                    topic = Note.canvasId newNote,
-                    message = newNote
-                  }
-          let streamMessage = BL.unpack $ encode streamDTO
-          liftIO $ broadcastMessage channelMap (Note.canvasId newNote) streamMessage
-          return $ successResponse "Note updated successfully" $ Just newNote
+      do
+        canvas <- liftIO $ findById (PGRepo pool :: PGRepo Canvas) (Note.canvasId oldNote)
+        case canvas of
+          Nothing -> throwError $ jsonError404 "Failed to update note" (Just "Canvas not found.")
+          Just canvasRecord ->
+            do
+              let Canvas.Owner {id = canvasAuhorId} = Canvas.owner canvasRecord
+              if Note.authorId oldNote /= User.id user && canvasAuhorId /= User.id user
+                then throwError $ jsonError403 "Forbidden" (Just "You are not the author of this note")
+                else do
+                  currentTime <- liftIO getCurrentTime
+                  let updatedNote =
+                        oldNote
+                          { Note.canvasId = NoteDTO.canvasId noteDTO,
+                            Note.subject = NoteDTO.subject noteDTO,
+                            Note.body = NoteDTO.body noteDTO,
+                            Note.positionLeft = NoteDTO.positionLeft noteDTO,
+                            Note.positionTop = NoteDTO.positionTop noteDTO,
+                            Note.width = NoteDTO.width noteDTO,
+                            Note.zIndex = NoteDTO.zIndex noteDTO,
+                            Note.updatedAt = currentTime
+                          }
+                  newNote <- liftIO $ updateById connPool noteId updatedNote
+                  let streamDTO =
+                        StreamBaseDTO
+                          { event = "edit_note",
+                            topic = Note.canvasId newNote,
+                            message = newNote
+                          }
+                  let streamMessage = BL.unpack $ encode streamDTO
+                  liftIO $ broadcastMessage channelMap (Note.canvasId newNote) streamMessage
+                  return $ successResponse "Note updated successfully" $ Just newNote

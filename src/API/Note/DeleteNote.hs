@@ -12,6 +12,8 @@ import Data.Aeson (encode)
 import Data.ByteString.Lazy.Char8 as BL
 import Data.Pool (Pool)
 import Database.PostgreSQL.Simple (Connection)
+import Model.Canvas (Canvas)
+import qualified Model.Canvas as Canvas
 import Model.Note (Note)
 import qualified Model.Note as Note
 import Model.User (User)
@@ -28,17 +30,23 @@ deleteNoteHandler pool channelMap user noteId = do
   maybeNote <- liftIO $ findById connPool noteId
   case maybeNote of
     Nothing -> throwError $ jsonError404 "Failed to delete note" (Just "Note not found.")
-    Just note ->
-      if Note.authorId note /= User.id user
-        then throwError $ jsonError403 "Forbidden" (Just "You are not the author of this note")
-        else do
-          liftIO $ deleteById connPool noteId
-          let streamDTO =
-                StreamBaseDTO
-                  { event = "delete_note",
-                    topic = Note.canvasId note,
-                    message = noteId
-                  }
-          let streamMessage = BL.unpack $ encode streamDTO
-          liftIO $ broadcastMessage channelMap (Note.canvasId note) streamMessage
-          return $ successResponse "Note deleted successfully" Nothing
+    Just note -> do
+      canvas <- liftIO $ findById (PGRepo pool :: PGRepo Canvas) (Note.canvasId note)
+      case canvas of
+        Nothing -> throwError $ jsonError404 "Failed to delete note" (Just "Canvas not found.")
+        Just canvasRecord ->
+          do
+            let Canvas.Owner {id = canvasAuhorId} = Canvas.owner canvasRecord
+            if Note.authorId note /= User.id user && canvasAuhorId /= User.id user
+              then throwError $ jsonError403 "Forbidden" (Just "You are not authorized to delete this note.")
+              else do
+                liftIO $ deleteById connPool noteId
+                let streamDTO =
+                      StreamBaseDTO
+                        { event = "delete_note",
+                          topic = Note.canvasId note,
+                          message = noteId
+                        }
+                let streamMessage = BL.unpack $ encode streamDTO
+                liftIO $ broadcastMessage channelMap (Note.canvasId note) streamMessage
+                return $ successResponse "Note deleted successfully" Nothing
