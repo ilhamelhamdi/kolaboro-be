@@ -47,6 +47,9 @@ dependencies:
 - containers
 - stm
 - wai-cors
+- http-types
+- wai-logger
+- wai-extra
 
 
 ghc-options:

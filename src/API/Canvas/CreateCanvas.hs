@@ -7,6 +7,7 @@ module API.Canvas.CreateCanvas (CreateCanvasAPI, createCanvasHandler) where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import DTO.CanvasDTO (CanvasRequestDTO (..))
+import DTO.ResponseDTO (ResponseDTO, successResponse)
 import Data.Pool (Pool)
 import Data.Time (getCurrentTime)
 import Database.PostgreSQL.Simple (Connection)
@@ -16,9 +17,9 @@ import Model.User (User)
 import Repo.BaseRepo (BaseRepo (create), PGRepo (PGRepo))
 import Servant
 
-type CreateCanvasAPI = ReqBody '[JSON] CanvasRequestDTO :> Post '[JSON] Canvas
+type CreateCanvasAPI = ReqBody '[JSON] CanvasRequestDTO :> Post '[JSON] (ResponseDTO Canvas)
 
-createCanvasHandler :: User -> Pool Connection -> CanvasRequestDTO -> Handler Canvas
+createCanvasHandler :: User -> Pool Connection -> CanvasRequestDTO -> Handler (ResponseDTO Canvas)
 createCanvasHandler user pool reqBody = do
   currentTime <- liftIO getCurrentTime
   let CanvasRequestDTO
@@ -40,4 +41,5 @@ createCanvasHandler user pool reqBody = do
           }
   savedCanvas <- liftIO $ create (PGRepo pool :: PGRepo Canvas) canvas
   let owner = Canvas.userToOwner user
-  return savedCanvas {owner}
+  let res = savedCanvas {owner}
+  return $ successResponse "Canvas created successfully" $ Just res

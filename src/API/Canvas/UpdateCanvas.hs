@@ -15,15 +15,16 @@ import qualified Model.Canvas as Canvas
 import Model.User (User)
 import Repo.BaseRepo (BaseRepo (updateById), PGRepo (PGRepo))
 import Servant
+import DTO.ResponseDTO (jsonError404, ResponseDTO, successResponse)
 
-type UpdateCanvasAPI = Capture "canvasId" Int :> ReqBody '[JSON] CanvasRequestDTO :> Put '[JSON] Canvas
+type UpdateCanvasAPI = Capture "canvasId" Int :> ReqBody '[JSON] CanvasRequestDTO :> Put '[JSON] (ResponseDTO Canvas)
 
-updateCanvasHandler :: User -> Pool Connection -> Int -> CanvasRequestDTO -> Handler Canvas
+updateCanvasHandler :: User -> Pool Connection -> Int -> CanvasRequestDTO -> Handler (ResponseDTO Canvas)
 updateCanvasHandler user pool canvasId canvasDTO = do
   let connPool = PGRepo pool :: PGRepo Canvas
   maybeOldCanvas <- liftIO $ findUserCanvasById connPool user canvasId
   case maybeOldCanvas of
-    Nothing -> throwError err404 {errBody = "Canvas not found"}
+    Nothing -> throwError $ jsonError404 "Failed to update canvas" (Just "Canvas not found.")
     Just oldCanvas -> do
       currentTime <- liftIO getCurrentTime
       let updatedCanvas =
@@ -35,4 +36,5 @@ updateCanvasHandler user pool canvasId canvasDTO = do
                 updatedAt = currentTime
               }
       newCanvas <- liftIO $ updateById connPool canvasId updatedCanvas
-      return $ Canvas.setOwner newCanvas $ Canvas.userToOwner user
+      let res = newCanvas {owner = Canvas.userToOwner user}
+      return $ successResponse "Canvas updated successfully" $ Just res

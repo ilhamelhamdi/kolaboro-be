@@ -19,13 +19,13 @@ import qualified Model.User as User
 import Repo.BaseRepo (BaseRepo (create), PGRepo (PGRepo))
 import Servant
 import Utils.ChannelUtils (TopicChannelMap, broadcastMessage)
+import DTO.ResponseDTO (ResponseDTO, successResponse)
 
-type CreateNoteAPI = ReqBody '[JSON] NoteDTO :> Post '[JSON] ()
+type CreateNoteAPI = ReqBody '[JSON] NoteDTO :> Post '[JSON] (ResponseDTO Note)
 
-createNoteHandler :: Pool Connection -> TopicChannelMap -> User -> NoteDTO -> Handler ()
+createNoteHandler :: Pool Connection -> TopicChannelMap -> User -> NoteDTO -> Handler (ResponseDTO Note)
 createNoteHandler dbPool channelMap user dto = do
   currentTime <- liftIO getCurrentTime
-
   let NoteDTO {canvasId, subject, body, positionLeft, positionTop, width, zIndex} = dto
   let note =
         Note
@@ -46,5 +46,4 @@ createNoteHandler dbPool channelMap user dto = do
   let streamMessageDTO = StreamBaseDTO {event = "add_note", topic = canvasId, message = savedNote}
   let streamMessage = BL.unpack $ encode streamMessageDTO
   liftIO $ broadcastMessage channelMap canvasId streamMessage
-
-  return ()
+  return $ successResponse "Note created successfully" $ Just savedNote

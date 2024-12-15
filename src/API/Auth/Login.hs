@@ -8,6 +8,7 @@ module API.Auth.Login (LoginAPI, loginHandler) where
 
 import Control.Exception ()
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import DTO.ResponseDTO (ResponseDTO, jsonError401, successResponse)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Pool (Pool)
 import Data.Text (Text)
@@ -20,12 +21,7 @@ import Servant.Auth.Server
 import Utils.JWTUtils (generateToken)
 import Prelude hiding (id)
 
-type LoginAPI = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] Token
-
-newtype Token = Token {token :: Text}
-  deriving (Eq, Show, Generic)
-
-instance ToJSON Token
+type LoginAPI = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] (ResponseDTO LoginResposeData)
 
 data LoginRequest = LoginRequest
   { email :: String,
@@ -37,17 +33,26 @@ instance FromJSON LoginRequest
 
 instance ToJSON LoginRequest
 
-loginHandler :: JWTSettings -> Pool Connection -> LoginRequest -> Handler Token
+data LoginResposeData = LoginResposeData
+  { token :: Text,
+    user :: User
+  }
+  deriving (Generic)
+
+instance ToJSON LoginResposeData
+
+loginHandler :: JWTSettings -> Pool Connection -> LoginRequest -> Handler (ResponseDTO LoginResposeData)
 loginHandler jwtSettings pool (LoginRequest _email _password) = do
-  user <- liftIO $ validateUser pool _email _password
-  case user of
-    Just u -> do
-      jwt <- liftIO $ generateToken jwtSettings u
-      case jwt of
-        Left _ -> throwError $ err401 {errBody = "Failed to generate token"}
-        Right t -> return $ Token t
+  maybeUser <- liftIO $ validateUser pool _email _password
+  case maybeUser of
+    Just user_ -> do
+      eitherToken <- liftIO $ generateToken jwtSettings user_
+      case eitherToken of
+        Left err -> throwError $ jsonError401 "Failed to login" (Just err)
+        Right jwt -> do
+          return $ successResponse "Logged in successful" $ Just (LoginResposeData jwt user_)
     Nothing ->
-      throwError err401 {errBody = "Invalid credentials"}
+      throwError $ jsonError401 "Failed to login" (Just "Invalid credentials.")
 
 validateUser :: Pool Connection -> String -> String -> IO (Maybe User)
 validateUser pool reqEmail reqPassword = do

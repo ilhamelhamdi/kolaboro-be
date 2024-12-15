@@ -12,6 +12,7 @@ import Model.Canvas (Canvas, findUserCanvasById)
 import Model.User (User)
 import Repo.BaseRepo (BaseRepo (deleteById), PGRepo (PGRepo))
 import Servant
+import DTO.ResponseDTO (jsonError404)
 
 type DeleteCanvasAPI = Capture "canvasId" Int :> Delete '[JSON] ()
 
@@ -20,5 +21,5 @@ deleteCanvasHandler user pool canvasId = do
   let connPool = PGRepo pool :: PGRepo Canvas
   canvas <- liftIO $ findUserCanvasById connPool user canvasId
   case canvas of
-    Nothing -> throwError err404 {errBody = "Canvas not found"}
+    Nothing -> throwError $ jsonError404 "Failed to delete canvas" (Just "Canvas not found.")
     Just _ -> liftIO $ deleteById connPool canvasId

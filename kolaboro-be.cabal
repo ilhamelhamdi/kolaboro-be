@@ -46,6 +46,7 @@ library
       DB.DBManager
       DTO.CanvasDTO
       DTO.NoteDTO
+      DTO.ResponseDTO
       DTO.StreamBaseDTO
       Dummy
       Lib
@@ -54,6 +55,7 @@ library
       Model.User
       Repo.BaseRepo
       Utils.ChannelUtils
+      Utils.CorsUtils
       Utils.JWTUtils
   other-modules:
       Paths_kolaboro_be
@@ -67,6 +69,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
+    , http-types
     , jose
     , lens
     , monad-logger
@@ -88,6 +91,8 @@ library
     , transformers
     , wai
     , wai-cors
+    , wai-extra
+    , wai-logger
     , warp
     , websockets
   default-language: Haskell2010
@@ -106,6 +111,7 @@ executable kolaboro-be-exe
     , base
     , bytestring
     , containers
+    , http-types
     , jose
     , kolaboro-be
     , lens
@@ -128,6 +134,8 @@ executable kolaboro-be-exe
     , transformers
     , wai
     , wai-cors
+    , wai-extra
+    , wai-logger
     , warp
     , websockets
   default-language: Haskell2010
@@ -150,6 +158,7 @@ test-suite kolaboro-be-test
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , http-types
     , jose
     , kolaboro-be
     , lens
@@ -172,6 +181,8 @@ test-suite kolaboro-be-test
     , transformers
     , wai
     , wai-cors
+    , wai-extra
+    , wai-logger
     , warp
     , websockets
   default-language: Haskell2010

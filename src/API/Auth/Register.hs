@@ -8,6 +8,7 @@
 module API.Auth.Register (RegisterAPI, registerHandler) where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import DTO.ResponseDTO (jsonError)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Pool (Pool)
 import Data.Time (getCurrentTime)
@@ -37,7 +38,8 @@ registerHandler pool (RegisterRequest email password username display_name) = do
   let connPool = PGRepo pool :: PGRepo User
   registeredUser <- liftIO $ findByPredicate connPool $ equals "email" email
   case registeredUser of
-    Just _ -> throwError err401 {errBody = "User already registered"}
+    Just _ ->
+      throwError $ jsonError err409 "Register Failed" (Just "User already registered.")
     Nothing -> return ()
   currentTime <- liftIO getCurrentTime
   let user = User {email, password, username, display_name, id = 0, registered_at = currentTime, modified_at = currentTime}

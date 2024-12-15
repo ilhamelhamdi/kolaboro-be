@@ -6,11 +6,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Model.User (User (..)) where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, object, toJSON, (.=))
 import Data.List (intercalate)
 import Data.Pool (withResource)
 import Data.String (IsString (fromString))
@@ -35,7 +36,16 @@ data User = User
 
 instance FromJSON User
 
-instance ToJSON User
+instance ToJSON User where
+  toJSON User {..} =
+    object
+      [ "id" .= id,
+        "email" .= email,
+        "username" .= username,
+        "display_name" .= display_name,
+        "registered_at" .= registered_at,
+        "modified_at" .= modified_at
+      ]
 
 instance FromRow User where
   fromRow = User <$> field <*> field <*> field <*> field <*> field <*> field <*> field

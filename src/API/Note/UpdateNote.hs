@@ -7,6 +7,7 @@ module API.Note.UpdateNote (updateNoteHandler, UpdateNoteAPI) where
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import DTO.NoteDTO (NoteDTO)
 import qualified DTO.NoteDTO as NoteDTO
+import DTO.ResponseDTO (ResponseDTO, jsonError403, jsonError404, successResponse)
 import DTO.StreamBaseDTO (StreamBaseDTO (..))
 import Data.Aeson (encode)
 import qualified Data.ByteString.Lazy.Char8 as BL
@@ -21,17 +22,17 @@ import Repo.BaseRepo (BaseRepo (findById, updateById), PGRepo (PGRepo))
 import Servant
 import Utils.ChannelUtils (TopicChannelMap, broadcastMessage)
 
-type UpdateNoteAPI = Capture "noteId" Int :> ReqBody '[JSON] NoteDTO :> Put '[JSON] Note
+type UpdateNoteAPI = Capture "noteId" Int :> ReqBody '[JSON] NoteDTO :> Put '[JSON] (ResponseDTO Note)
 
-updateNoteHandler :: Pool Connection -> TopicChannelMap -> User -> Int -> NoteDTO -> Handler Note
+updateNoteHandler :: Pool Connection -> TopicChannelMap -> User -> Int -> NoteDTO -> Handler (ResponseDTO Note)
 updateNoteHandler pool channelMap user noteId noteDTO = do
   let connPool = PGRepo pool :: PGRepo Note
   maybeOldNote <- liftIO $ findById connPool noteId
   case maybeOldNote of
-    Nothing -> throwError err404 {errBody = "Note not found"}
+    Nothing -> throwError $ jsonError404 "Failed to update note" (Just "Note not found.")
     Just oldNote ->
       if Note.authorId oldNote /= User.id user
-        then throwError err403 {errBody = "Forbidden"}
+        then throwError $ jsonError403 "Forbidden" (Just "You are not the author of this note")
         else do
           currentTime <- liftIO getCurrentTime
           let updatedNote =
@@ -54,4 +55,4 @@ updateNoteHandler pool channelMap user noteId noteDTO = do
                   }
           let streamMessage = BL.unpack $ encode streamDTO
           liftIO $ broadcastMessage channelMap (Note.canvasId newNote) streamMessage
-          return newNote
+          return $ successResponse "Note updated successfully" $ Just newNote
