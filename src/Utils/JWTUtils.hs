@@ -39,7 +39,7 @@ initJWTSettings = do
 generateToken :: JWTSettings -> User -> IO (Either String Text)
 generateToken jwtSettings user = do
   currentTime <- getCurrentTime
-  let expirationTime = addUTCTime 3600 currentTime -- Token valid for 1 hour
+  let expirationTime = addUTCTime 86400 currentTime -- Token valid for 24 hour
   eJwt <- makeJWT (userToUserClaims user) jwtSettings (Just expirationTime)
   case eJwt of
     Left err -> return $ Left (show err)
