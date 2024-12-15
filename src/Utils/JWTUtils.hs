@@ -11,7 +11,7 @@ import Crypto.JWT
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString.Lazy as BL
 import Data.Pool (Pool)
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Data.Text.Encoding
 import Data.Time (addUTCTime, getCurrentTime)
 import Database.PostgreSQL.Simple (Connection)
@@ -19,7 +19,7 @@ import GHC.Generics (Generic)
 import Model.User (User)
 import qualified Model.User as User
 import Repo.BaseRepo (BaseRepo (findById), PGRepo (PGRepo))
-import Servant.Auth.Server (FromJWT, JWTSettings, ToJWT, defaultJWTSettings, makeJWT, verifyJWT)
+import Servant.Auth.Server (FromJWT, JWTSettings, ToJWT, defaultJWTSettings, makeJWT)
 import qualified Servant.Auth.Server as SAS
 
 generateKey :: IO JWK

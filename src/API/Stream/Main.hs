@@ -11,15 +11,14 @@ import Control.Monad (forever)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import DTO.StreamBaseDTO (StreamBaseDTO (..))
 import Data.Aeson (encode)
-import Data.ByteString.Char8 (ByteString, pack)
-import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.ByteString.Char8 (pack)
 import qualified Data.Map as Map
 import Data.Pool (Pool)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import qualified Database.PostgreSQL.Simple as PG
 import Model.Canvas (Canvas)
-import Model.Note (Note )
+import Model.Note (Note)
 import Model.User (User)
 import Network.WebSockets (Connection, acceptRequest, rejectRequest, sendTextData, withPingThread)
 -- import Network.WebSockets.PingPong (withPingPong)
@@ -67,12 +66,11 @@ streamHandler jwtSetting dbPool channelMapVar channelId maybeToken penConn =
     setupConnection :: Either Text User -> Either Text TopicChannel -> IO ()
     setupConnection (Right _) (Right tChannel) = do
       conn <- acceptRequest penConn
-      withPingThread conn 30 (return ()) $ do
-        sendTextData conn ("Connected!" :: ByteString)
+      withPingThread conn 5 (return ()) $ do
         refreshNotes conn
+        refreshCanvas conn
         rChannel <- dupChan tChannel
         listenChannel conn rChannel
-    -- forever $ handleMessages conn tChannel user
     setupConnection (Left err) _ = rejectRequest penConn $ encodeUtf8 err
     setupConnection _ (Left err) = rejectRequest penConn $ encodeUtf8 err
 
@@ -82,33 +80,20 @@ streamHandler jwtSetting dbPool channelMapVar channelId maybeToken penConn =
         msg <- readChan rChannel
         sendTextData conn $ pack msg
 
+    refreshCanvas :: Connection -> IO ()
+    refreshCanvas conn = do
+      maybeCanvas <- findById (PGRepo dbPool :: PGRepo Canvas) channelId
+      case maybeCanvas of
+        Nothing -> return ()
+        Just canvas -> do
+          let streamDTO = StreamBaseDTO {event = "refresh_canvas", topic = channelId, message = canvas}
+          sendTextData conn $ encode streamDTO
+          return ()
+
     refreshNotes :: Connection -> IO ()
     refreshNotes conn = do
       let predicate = equals "canvas_id" channelId
-      allNotes <- findListByPredicate (PGRepo dbPool :: PGRepo Model.Note.Note) predicate
+      allNotes <- findListByPredicate (PGRepo dbPool :: PGRepo Note) predicate
       let streamDTO = StreamBaseDTO {event = "refresh_notes", topic = channelId, message = allNotes}
       sendTextData conn $ encode streamDTO
       return ()
-
--- handleMessages :: Connection -> TopicChannel -> User -> IO ()
--- handleMessages conn tChannel user = do
---   msg <- receiveData conn :: IO ByteString
---   case eitherDecode (BL.fromStrict msg) :: Either String StreamBaseDTO of
---     Left err -> sendTextData conn $ pack err
---     Right dto -> routeEventToHandler conn tChannel user dto
-
--- routeEventToHandler :: Connection -> TopicChannel -> User -> StreamBaseDTO -> IO ()
--- routeEventToHandler conn tChannel user dto = do
---   let handlers = Map.fromList [("add_note", handleEvent addNoteHandler)]
---   case Map.lookup (event dto) handlers of
---     Just handler -> handler conn tChannel user dto
---     Nothing -> sendTextData conn $ pack "Unknown event"
-
--- handleEvent :: (FromJSON a) => EventHandler a -> Connection -> TopicChannel -> User -> StreamBaseDTO -> IO ()
--- handleEvent action conn tChannel user dto =
---   case decodeMessage dto of
---     Left err -> sendTextData conn $ pack err
---     Right payload -> action conn dbPool tChannel user payload
---   where
---     decodeMessage :: (FromJSON a) => StreamBaseDTO -> Either String a
---     decodeMessage = eitherDecode . BL.fromStrict . pack . message
