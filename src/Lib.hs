@@ -38,6 +38,7 @@ server jwtSettings pool channelMap =
 startApp :: IO ()
 startApp = do
   jwtSettings <- initJWTSettings
+  connectionString <- getConnectionString
   pool <- initConnectionPool connectionString
   channelMap <- newTVarIO Map.empty :: IO (TVar TopicChannelMap)
   let cfg = jwtSettings :. defaultCookieSettings :. EmptyContext
