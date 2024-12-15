@@ -8,7 +8,7 @@ import Network.Wai.Middleware.Cors
 corsResourcePolicy :: CorsResourcePolicy
 corsResourcePolicy =
   CorsResourcePolicy
-    { corsOrigins = Just (["http://localhost:3000"], True),
+    { corsOrigins = Just (["http://localhost:3000", "https://kolaboro-fe.vercel.app/"], True),
       corsMethods = simpleMethods ++ ["OPTIONS", "PUT", "DELETE"],
       corsRequestHeaders = ["content-type", "Authorization"],
       corsExposedHeaders = Nothing,
