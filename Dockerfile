@@ -1,19 +1,23 @@
-FROM ubuntu:22.04
+# Use a lightweight Haskell image as the base
+FROM haskell:9.6
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y build-essential g++ libtinfo6 zlib1g-dev curl libpq-dev postgresql-client
 
-# Install Haskell Stack
-RUN curl -sSL https://get.haskellstack.org/ | sh
-
 # Set working directory
 WORKDIR /app
 
-# Copy project files
-COPY . .
+# Copy only stack configuration files first (for caching dependencies)
+COPY stack.yaml stack.yaml.lock /app/
 
 # Set up GHC and dependencies
 RUN stack setup
+RUN stack build --only-dependencies
+
+# Copy the rest of the application files
+COPY . /app
+
+# Build the application
 RUN stack build
 
 # Expose the app's port
