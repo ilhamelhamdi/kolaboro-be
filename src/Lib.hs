@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Lib (startApp) where
 
@@ -15,11 +16,12 @@ import Data.Pool (Pool)
 import Database.PostgreSQL.Simple (Connection)
 import GHC.Conc (TVar, newTVarIO)
 import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
 import Servant
 import Servant.Auth.Server (JWTSettings, defaultCookieSettings)
 import Utils.ChannelUtils (TopicChannelMap)
 import Utils.JWTUtils (initJWTSettings)
-import Network.Wai.Middleware.Cors (simpleCors)
+import Utils.CorsUtils (corsConfig)
 
 api :: Proxy API
 api = Proxy
@@ -40,4 +42,5 @@ startApp = do
   channelMap <- newTVarIO Map.empty :: IO (TVar TopicChannelMap)
   let cfg = jwtSettings :. defaultCookieSettings :. EmptyContext
   putStrLn "Running server on port 8081"
-  run 8081 $ simpleCors $ serveWithContext api cfg (server jwtSettings pool channelMap)
+  let app = logStdoutDev $ corsConfig $ serveWithContext api cfg (server jwtSettings pool channelMap)
+  run 8081 app
