@@ -9,7 +9,7 @@
 
 module Model.Canvas (Canvas (..), Owner (..), userToOwner, setOwner, findUserCanvasById) where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON (toJSON), object, (.=))
 import Data.List (intercalate)
 import Data.Pool (withResource)
 import Data.String (fromString)
@@ -22,13 +22,12 @@ import GHC.Generics (Generic)
 import Model.User (User)
 import qualified Model.User as User
 import Repo.BaseRepo (BaseRepo (..), PGRepo (..), Predicate, toSqlWithParams)
+import Utils.StringUtils (toSlug)
 import Prelude hiding (id)
 
 data Canvas = Canvas
   { id :: Int,
     title :: String,
-    namespace :: String,
-    address :: String,
     owner :: Owner,
     background :: String,
     createdAt :: UTCTime,
@@ -36,18 +35,27 @@ data Canvas = Canvas
   }
   deriving (Eq, Show, Generic)
 
-instance ToJSON Canvas
+instance ToJSON Canvas where
+  toJSON Canvas {id, title, owner, background, createdAt, updatedAt} =
+    object
+      [ "id" .= id,
+        "title" .= title,
+        "namespace" .= username owner,
+        "owner" .= owner,
+        "address" .= (username owner ++ "/" ++ toSlug title ++ "-" ++ show id),
+        "background" .= background,
+        "created_at" .= createdAt,
+        "updated_at" .= updatedAt
+      ]
 
 instance FromJSON Canvas
 
 instance FromRow Canvas where
-  fromRow = Canvas <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = Canvas <$> field <*> field <*> field <*> field <*> field <*> field
 
 toRowWithoutId :: Canvas -> [Action]
-toRowWithoutId Canvas {title, namespace, address, owner, background, createdAt, updatedAt} =
+toRowWithoutId Canvas {title, owner, background, createdAt, updatedAt} =
   [ toField title,
-    toField namespace,
-    toField address,
     toField owner,
     toField background,
     toField createdAt,
@@ -55,7 +63,7 @@ toRowWithoutId Canvas {title, namespace, address, owner, background, createdAt, 
   ]
 
 canvasFieldsWithoutId :: [String]
-canvasFieldsWithoutId = ["title", "namespace", "address", "owner_id", "background", "created_at", "updated_at"]
+canvasFieldsWithoutId = ["title", "owner_id", "background", "created_at", "updated_at"]
 
 instance BaseRepo (PGRepo Canvas) Canvas Int where
   findListByPredicate :: PGRepo Canvas -> Predicate -> IO [Canvas]

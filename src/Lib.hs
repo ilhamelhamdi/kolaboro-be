@@ -6,10 +6,10 @@ module Lib (startApp) where
 import API.Auth.Main (authServer)
 import API.Canvas.Main (canvasServer)
 import API.Note.Main (noteServer)
+import API.Profile.Main (profileServer)
 import API.Protected (protectedHandler)
 import API.Root (API)
 import API.Stream.Main (streamHandler)
-import API.User (userServer)
 import DB.DBManager
 import qualified Data.Map as Map
 import Data.Pool (Pool)
@@ -20,20 +20,20 @@ import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
 import Servant
 import Servant.Auth.Server (JWTSettings, defaultCookieSettings)
 import Utils.ChannelUtils (TopicChannelMap)
-import Utils.JWTUtils (initJWTSettings)
 import Utils.CorsUtils (corsConfig)
+import Utils.JWTUtils (initJWTSettings)
 
 api :: Proxy API
 api = Proxy
 
 server :: JWTSettings -> Pool Connection -> TVar TopicChannelMap -> Server API
 server jwtSettings pool channelMap =
-  userServer
-    :<|> authServer jwtSettings pool
+  authServer jwtSettings pool
     :<|> protectedHandler
-    :<|> canvasServer pool
+    :<|> canvasServer pool channelMap
     :<|> noteServer pool channelMap
     :<|> streamHandler jwtSettings pool channelMap
+    :<|> profileServer pool
 
 startApp :: IO ()
 startApp = do

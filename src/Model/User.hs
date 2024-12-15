@@ -11,7 +11,7 @@
 
 module Model.User (User (..)) where
 
-import Data.Aeson (FromJSON, ToJSON, object, toJSON, (.=))
+import Data.Aeson (FromJSON, ToJSON, Value, object, toJSON, (.=))
 import Data.List (intercalate)
 import Data.Pool (withResource)
 import Data.String (IsString (fromString))

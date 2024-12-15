@@ -24,16 +24,12 @@ createCanvasHandler user pool reqBody = do
   currentTime <- liftIO getCurrentTime
   let CanvasRequestDTO
         { title = reqTitle,
-          namespace = reqNamespace,
-          address = reqAddress,
           background = reqBackground
         } = reqBody
   let canvas =
         Canvas
           { id = 0,
             title = reqTitle,
-            namespace = reqNamespace,
-            address = reqAddress,
             owner = userToOwner user,
             background = reqBackground,
             createdAt = currentTime,

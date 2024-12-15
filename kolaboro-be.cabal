@@ -31,18 +31,18 @@ library
       API.Canvas.CreateCanvas
       API.Canvas.DeleteCanvas
       API.Canvas.GetCanvas
-      API.Canvas.GetCanvases
+      API.Canvas.GetUserCanvases
       API.Canvas.Main
       API.Canvas.UpdateCanvas
       API.Note.CreateNote
       API.Note.DeleteNote
       API.Note.Main
       API.Note.UpdateNote
+      API.Profile.GetProfile
+      API.Profile.Main
       API.Protected
       API.Root
-      API.Stream.EventHandler
       API.Stream.Main
-      API.User
       DB.DBManager
       DTO.CanvasDTO
       DTO.NoteDTO
@@ -52,11 +52,13 @@ library
       Lib
       Model.Canvas
       Model.Note
+      Model.Profile
       Model.User
       Repo.BaseRepo
       Utils.ChannelUtils
       Utils.CorsUtils
       Utils.JWTUtils
+      Utils.StringUtils
   other-modules:
       Paths_kolaboro_be
   autogen-modules:

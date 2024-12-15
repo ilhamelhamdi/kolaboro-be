@@ -19,12 +19,16 @@ import Prelude hiding (id)
 
 type GetCanvasAPI = Capture "canvasId" Int :> Get '[JSON] (ResponseDTO Canvas)
 
-getCanvasHandler :: User -> Pool Connection -> Int -> Handler (ResponseDTO Canvas)
-getCanvasHandler user pool canvasId = do
+getCanvasHandler :: Pool Connection -> Int -> Handler (ResponseDTO Canvas)
+getCanvasHandler pool canvasId = do
   maybeCanvas <- liftIO $ findById (PGRepo pool :: PGRepo Canvas) canvasId
-  let owner = Canvas.userToOwner user
   case maybeCanvas of
     Nothing -> throwError $ jsonError404 "Failed to fetch canvas" (Just "Canvas not found.")
     Just canvas -> do
-      let res = canvas {Canvas.owner}
-      return $ successResponse "Canvas fetched successfully" $ Just res
+      let Canvas.Owner {id = ownerId} = Canvas.owner canvas
+      maybeUser <- liftIO $ findById (PGRepo pool :: PGRepo User) ownerId
+      case maybeUser of
+        Nothing -> throwError $ jsonError404 "Failed to fetch canvas" (Just "Canvas owner not found.")
+        Just user -> do
+          let res = canvas {Canvas.owner = Canvas.userToOwner user}
+          return $ successResponse "Canvas fetched successfully" $ Just res

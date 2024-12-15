@@ -7,8 +7,6 @@ import GHC.Generics (Generic)
 
 data CanvasRequestDTO = CanvasRequestDTO
   { title :: String,
-    namespace :: String,
-    address :: String,
     background :: String
   }
   deriving (Eq, Show, Generic)

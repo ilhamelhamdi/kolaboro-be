@@ -2,7 +2,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module API.Canvas.GetCanvases (GetCanvasesAPI, getCanvasesHandler) where
+module API.Canvas.GetUserCanvases (GetCanvasesAPI, getCanvasesHandler) where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import DTO.ResponseDTO (ResponseDTO, successResponse)
